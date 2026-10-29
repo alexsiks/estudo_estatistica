@@ -1,36 +1,60 @@
 import pandas as pd
-import requests as rq
 import glob
-import os
-import re
 import streamlit as st
 
 class BancoDados:
-    def __init__(self,path_list):
-        self.path_list=path_list
+
+    def __init__(self, path_list):
+        self.path_list = path_list
         self.dfs = []
 
-    # Realizar a leitura de todos os arquivos.
     def ler_base_dados(self):
-        self.path_list=glob.glob(self.path_list)
+        arquivos = glob.glob(self.path_list)
 
-        #  Para cada arquivo da lista do Diretório.
-        for path in self.path_list:
-            df=pd.read_csv(path,sep=";")
-            df["arquivo"]=path
+        self.dfs = [
+            pd.read_csv(path, sep=";").assign(arquivo=path)
+            for path in arquivos
+        ]
 
-            # Adicionar df na lista de dfs.
-            self.dfs.append(df)
+        if not self.dfs:
+            return pd.DataFrame()
 
-        return pd.concat(self.dfs,ignore_index=True)
+        return pd.concat(self.dfs, ignore_index=True)
 
-def main():
-    # atribuindo ao objeto as propriedades da classe de Banco de dados.
-    dados=BancoDados("dados/raw/levantamentos_pavimentada/*.csv")
 
-    # ler a base de dados.
-    st.write("Iniciando Aplicação.")
+class App:
 
-        
+    def __init__(self):
+        st.set_page_config(
+            page_title="Leitura de Dados",
+            layout="wide"
+        )
+
+        self.banco = BancoDados(
+            "dados/raw/levantamentos_pavimentada/*.csv"
+        )
+
+    def executar(self):
+        st.title("Leitura de Bases de Dados")
+        st.write("Iniciando aplicação.")
+
+        df = self.banco.ler_base_dados()
+
+        if df.empty:
+            st.warning("Nenhum arquivo CSV encontrado.")
+            return
+
+        st.subheader("Prévia dos dados")
+        st.dataframe(df.head(10), use_container_width=True)
+
+        st.subheader("Informações da base")
+        st.metric("Total de registros", f"{len(df):,}")
+        st.metric("Total de colunas", len(df.columns))
+
+        st.subheader("Colunas disponíveis")
+        st.write(df.columns.tolist())
+
+
 if __name__ == "__main__":
-    main()
+    app = App()
+    app.executar()
