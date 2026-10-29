@@ -3,21 +3,26 @@ import requests as rq
 import glob
 import os
 import re
-import streamlit as st
+
 
 class BancoDados:
-    def __init__(self,df,path):
-        self.df = df    
-        self.path = path
+    def __init__(self,path_list):
+        self.path_list=path_list
+        self.df = None
+        self.dfs = []
     
-    def ler_base_dados():
-        path_list=glob.glob(f"dados/raw/levantamentos_pavimentada/*.csv")
+    def ler_base_dados(self):
+        lista_arquivos=glob.glob(self.path_list)
 
-        dfs=[]
-        for path in path_list:
-            df=pd.read_csv(path,sep=";")
-            df["arquivo"]=path
-            dfs.append(df)
+        
+        for caminho in lista_arquivos:
+            self.df=pd.read_csv(caminho,sep=";")
+            self.df["arquivo"]=caminho
+            self.dfs.append(self.df)
 
-        df_combined = pd.concat(dfs,ignore_index=True)
+        df_combined = pd.concat(self.dfs,ignore_index=True)
         print(df_combined)
+
+if __name__ == "__main__":
+    amostras=BancoDados("dados/raw/levantamento_pavimentada/*.csv")
+    amostras.ler_base_dados() 
