@@ -1,6 +1,7 @@
 import pandas as pd
 import glob
 import streamlit as st
+import plotly.express as px
 
 class BancoDados:
 
@@ -21,6 +22,13 @@ class BancoDados:
 
         return pd.concat(self.dfs, ignore_index=True)
 
+class Grafico:
+
+    def __init__(self,df):
+        self.df = df
+
+    def barras(self,x,y,titulo):
+        st.bar_chart(self.df, x=x, y=y, title=titulo)
 
 class App:
 
@@ -33,12 +41,14 @@ class App:
         self.banco = BancoDados(
             "dados/raw/levantamentos_pavimentada/*.csv"
         )
+        self.grafico = Grafico(self.banco.ler_base_dados())
 
     def executar(self):
         st.title("Leitura de Bases de Dados")
         st.write("Iniciando aplicação.")
 
         df = self.banco.ler_base_dados()
+
 
         if df.empty:
             st.warning("Nenhum arquivo CSV encontrado.")
